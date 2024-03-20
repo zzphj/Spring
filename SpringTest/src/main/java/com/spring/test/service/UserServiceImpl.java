@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
  * @Slogan: 可以写不出一行高深的代码，但是写出的每一行代码必须规范
  * @描述:
  */
-@Service
+@Service("userServiceImpl")
 public class UserServiceImpl {
 	public void sayHello(){
 		System.out.println("你好呀spring！");

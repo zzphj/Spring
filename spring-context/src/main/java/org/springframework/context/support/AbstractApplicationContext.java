@@ -521,11 +521,12 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			// Prepare this context for refreshing. （为更新准备上下文，设定一些标志）
 			prepareRefresh();
 
-			// Tell the subclass to refresh the internal bean factory. （告诉子类去更新它们的 bean factory）
-			//  类的注册到 bean factory 也是在这一步
+			// 1.refreshBeanFactory() 刷新BeanFactory
+			// 2.getBeanFactory() 获取BeanFactory
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
 			// Prepare the bean factory for use in this context.
+			//准备在上下文中使用的bean工厂
 			prepareBeanFactory(beanFactory);
 
 			try {
@@ -533,28 +534,35 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				postProcessBeanFactory(beanFactory);
 
 				// Invoke factory processors registered as beans in the context.
+				// 开始调用BeanFactory的后置处理器
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
+				// 注册bean的后置处理器
 				registerBeanPostProcessors(beanFactory);
 
 				// Initialize message source for this context.
+				// 国际化处理，为上下文初始化Message源，即不同语语言的消息体
 				initMessageSource();
 
 				// Initialize event multicaster for this context.
+				// 初始化上下文的事件广播器
 				initApplicationEventMulticaster();
 
 				// Initialize other special beans in specific context subclasses.
+				// 能够被覆盖的模板方法，用来添加特定上下文的更新工作，在特殊bean进行初始化或者单例bean进行实例化时被调用，在该类中是一个空实现
 				onRefresh();
 
 				// Check for listener beans and register them.
+				// 在所有注册的bean中查找Listener bean,注册到消息广播器中，即向监听器发布事件
 				registerListeners();
 
 				// Instantiate all remaining (non-lazy-init) singletons.
-				// 非延迟加载的类，将在这一步实例化，完成类的加载。
+				// 非懒加载的类，将在这一步实例化，完成类的加载。好处是加载快，启动加载得时候就能发现Bean得问题
 				finishBeanFactoryInitialization(beanFactory);
 
 				// Last step: publish corresponding event.
+				// 最后一步：完成刷新过程，通知生命周期处理器lifecycleProcessor刷新过程
 				finishRefresh();
 			}
 

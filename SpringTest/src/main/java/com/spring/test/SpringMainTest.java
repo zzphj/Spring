@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Configuration;
 public class SpringMainTest {
 	public static void main(String[] args) {
 		ApplicationContext context=new AnnotationConfigApplicationContext(SpringMainTest.class);
-		UserServiceImpl bean = context.getBean(UserServiceImpl.class);
+		UserServiceImpl bean = (UserServiceImpl) context.getBean("userServiceImpl");
 		bean.sayHello();
 	}
 
