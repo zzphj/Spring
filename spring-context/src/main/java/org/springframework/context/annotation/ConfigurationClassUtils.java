@@ -154,14 +154,15 @@ abstract class ConfigurationClassUtils {
 			return false;
 		}
 
-		// Any of the typical annotations found?
+		// 当前类是否有其中的注解
 		for (String indicator : candidateIndicators) {
 			if (metadata.isAnnotated(indicator)) {
+				// 有返回true
 				return true;
 			}
 		}
 
-		// Finally, let's look for @Bean methods...
+		// 判断当前类的方法上是否有@Bean注解
 		try {
 			return metadata.hasAnnotatedMethods(Bean.class.getName());
 		}
