@@ -15,10 +15,10 @@ import org.springframework.context.annotation.Configuration;
  * @Date: 2023/7/17 11:21
  */
 @Configuration
-@ComponentScan("com.spring.test")
+//@ComponentScan("com.spring.test")
 public class SpringMainTest {
 	public static void main(String[] args) {
-		ApplicationContext context=new AnnotationConfigApplicationContext(SpringMainTest.class);
+		ApplicationContext context = new AnnotationConfigApplicationContext("com.spring.test");
 		UserServiceImpl bean = (UserServiceImpl) context.getBean("userServiceImpl");
 		bean.sayHello();
 	}
