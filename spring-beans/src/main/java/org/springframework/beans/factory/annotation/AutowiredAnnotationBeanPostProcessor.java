@@ -128,6 +128,10 @@ import org.springframework.util.StringUtils;
  * @see Autowired
  * @see Value
  */
+// 继承类跟CommonAnnotationBeanPostProcessor 如出一辙，唯一不同的是，继承了功能更强大的
+// SmartInstantiationAwareBeanPostProcessor（InstantiationAwareBeanPostProcessor子类）
+// 实现这个类，是为了实现里面的推断构造方法
+// 作用：对 @Autowired @Value 进行
 public class AutowiredAnnotationBeanPostProcessor extends InstantiationAwareBeanPostProcessorAdapter
 		implements MergedBeanDefinitionPostProcessor, PriorityOrdered, BeanFactoryAware {
 
