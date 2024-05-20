@@ -559,6 +559,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			// bd只允许被处理一次
 			if (!mbd.postProcessed) {
 				try {
+					// 寻找 @Autowired，@Value，@Resource 属性注入注入点
+					// AutowiredAnnotationBeanPostProcessor: 处理 @Autowired，@Value 属性注入
+					// CommonAnnotationBeanPostProcessor: 处理 @Resource 属性注入
 					applyMergedBeanDefinitionPostProcessors(mbd, beanType, beanName);
 				}
 				catch (Throwable ex) {
@@ -1393,6 +1396,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 */
 	@SuppressWarnings("deprecation")  // for postProcessPropertyValues
 	protected void populateBean(String beanName, RootBeanDefinition mbd, @Nullable BeanWrapper bw) {
+		// 实例化出来的 BeanWrapper为null，就报错
 		if (bw == null) {
 			if (mbd.hasPropertyValues()) {
 				throw new BeanCreationException(
@@ -1420,7 +1424,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		//从BeanDefinition中获取Bean的所有属性
 		PropertyValues pvs = (mbd.hasPropertyValues() ? mbd.getPropertyValues() : null);
 
-		//开始依赖注入的过程，先处理Autowire的注入，根据自动注入模式调用相应的处理方法
+		// 步骤一：
+		// 处理beanDefinition的autowire属性。比如@Bean标签就可以设置这个属性；xml也可以设置这个属性
 		int resolvedAutowireMode = mbd.getResolvedAutowireMode();
 		if (resolvedAutowireMode == AUTOWIRE_BY_NAME || resolvedAutowireMode == AUTOWIRE_BY_TYPE) {
 			MutablePropertyValues newPvs = new MutablePropertyValues(pvs);
@@ -1436,6 +1441,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			pvs = newPvs;
 		}
 
+		// 步骤二：
+		// 处理@Autowired、@Value、@Resource等【自动注入】的属性填充（注意，之前是寻找注入点，这里才是真正赋值的地方
 		// 后处理器是否已经准备好（后处理器会处理已 @Autowired 形式来注入bean， 有一个子类 AutowiredAnnotationBeanPostProcessor 来处理 @Autowired 注入的 bean）
 		boolean hasInstAwareBpps = hasInstantiationAwareBeanPostProcessors();
 		// 是否需要依赖检查
@@ -1451,6 +1458,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			for (BeanPostProcessor bp : getBeanPostProcessors()) {
 				if (bp instanceof InstantiationAwareBeanPostProcessor) {
 					InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) bp;
+					// @Autowired、@Value、@Resource 真正在这里进行注入
+					// 注意：bw.getWrappedInstance() 获取出来的对象，和三级缓存工厂传入的对象，是同一个对象
 					PropertyValues pvsToUse = ibp.postProcessProperties(pvs, bw.getWrappedInstance(), beanName);
 					if (pvsToUse == null) {
 						if (filteredPds == null) {

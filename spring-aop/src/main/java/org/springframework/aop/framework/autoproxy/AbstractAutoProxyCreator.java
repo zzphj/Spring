@@ -237,6 +237,13 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	public Object getEarlyBeanReference(Object bean, String beanName) {
 		Object cacheKey = getCacheKey(bean.getClass(), beanName);
 		// 添加到二级缓存中
+		/**
+		 * 判断是否需要给当前的普通对象创建一个代理对象，回去查询所有的advice和advisor。
+		 * 如果需要，这里会提前创建一个不完整的代理对象（因为此时还进行依赖注入等其他的生命周期），
+		 * 并将其放入到earlySingletonObjects中。
+		 * 这样如果发生循环依赖，那么就可以直接将这个不完整的代理对象直接注入到其他Bean的属性中去。随着Bean生命周期的进行，这个代理对象也会逐渐完整
+		 * （这里放入的是代理对象的内存地址，这个对象在堆中是唯一的，所以后面的操作也是针对的同一个对象）。
+		 */
 		this.earlyProxyReferences.put(cacheKey, bean);
 		// 1.如果需要代理，返回一个代理对象，不需要代理，直接返回当前传入的这个bean对象
 		// 2.也就是说这里返回代理对象，三级缓存中的工厂存储的也就是代理对象，而二级缓存中存储的是当前对象
