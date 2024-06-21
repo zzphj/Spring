@@ -255,10 +255,14 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		Object cacheKey = getCacheKey(beanClass, beanName);
 
 		if (!StringUtils.hasLength(beanName) || !this.targetSourcedBeans.contains(beanName)) {
+			// 是否增强过，增强过就不需要在增强了
 			if (this.advisedBeans.containsKey(cacheKey)) {
 				return null;
 			}
+			//this.isInfrastructureClass(beanClass)：InfrastructureClass直译为“基础类型” 它指代的是IOC容器中注册的基础类 包括切面类、切入点、增强器等 bean 对象
+			//this.shouldSkip(beanClass, beanName)：是否需要跳过（被跳过的bean对象不会被提前增强）
 			if (isInfrastructureClass(beanClass) || shouldSkip(beanClass, beanName)) {
+				// 当前 bean 加入缓存中 表示不需要增强
 				this.advisedBeans.put(cacheKey, Boolean.FALSE);
 				return null;
 			}
@@ -267,13 +271,18 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		// Create proxy here if we have a custom TargetSource.
 		// Suppresses unnecessary default instantiation of the target bean:
 		// The TargetSource will handle target instances in a custom fashion.
+		// 获取当前对象的自定义 targetSource 在创建代理对象的时候 会把当前对象包装成一个 targetSource 交给代理类 用于找到对象自身
 		TargetSource targetSource = getCustomTargetSource(beanClass, beanName);
 		if (targetSource != null) {
 			if (StringUtils.hasLength(beanName)) {
+				// targetSource 不为空 beanName 不为空 beanName加入 自定义 targetSourcedBeans 中
 				this.targetSourcedBeans.add(beanName);
 			}
+			// 获取指定 beanName 的通知过顾问(Advisors 是 spring 中 aop定义切面 通常由一个切点和一个通知组成(是通知的封装及延伸) aspect 是 AOP 规范切面  允许由多个切点和多个通知组成)
 			Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(beanClass, beanName, targetSource);
+			// 创建代理
 			Object proxy = createProxy(beanClass, beanName, specificInterceptors, targetSource);
+			// 加入缓存
 			this.proxyTypes.put(cacheKey, proxy.getClass());
 			return proxy;
 		}
@@ -305,7 +314,9 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	public Object postProcessAfterInitialization(@Nullable Object bean, String beanName) {
 		if (bean != null) {
 			Object cacheKey = getCacheKey(bean.getClass(), beanName);
+			// todo 在bean 的早期引用缓存中是否有 当前bean
 			if (this.earlyProxyReferences.remove(cacheKey) != bean) {
+				// 没有当前 bean 尝试创建代理对象
 				return wrapIfNecessary(bean, beanName, cacheKey);
 			}
 		}
@@ -354,9 +365,11 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		}
 
 		// Create proxy if we have advice.
+		// 获取所有切面的增强器（顾问）
 		Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(bean.getClass(), beanName, null);
 		if (specificInterceptors != DO_NOT_PROXY) {
 			this.advisedBeans.put(cacheKey, Boolean.TRUE);
+			// 创建代理
 			Object proxy = createProxy(
 					bean.getClass(), beanName, specificInterceptors, new SingletonTargetSource(bean));
 			this.proxyTypes.put(cacheKey, proxy.getClass());

@@ -44,9 +44,16 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 
 	private final AspectJAdvisorFactory advisorFactory;
 
+	/**
+	 * 所有切面beanName集合
+	 */
 	@Nullable
 	private volatile List<String> aspectBeanNames;
 
+	/**
+	 * key：切面BeanName
+	 * value：当前切面类的所有顾问（增强器）
+	 */
 	private final Map<String, List<Advisor>> advisorsCache = new ConcurrentHashMap<>();
 
 	private final Map<String, MetadataAwareAspectInstanceFactory> aspectFactoryCache = new ConcurrentHashMap<>();
@@ -74,6 +81,7 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 
 
 	/**
+	 * 初始化所有切面的增强器，并等待初始化后处理器的织入，也就是创建代理
 	 * Look for AspectJ-annotated aspect beans in the current bean factory,
 	 * and return to a list of Spring AOP Advisors representing them.
 	 * <p>Creates a Spring Advisor for each AspectJ advice method.
@@ -81,14 +89,20 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 	 * @see #isEligibleBean
 	 */
 	public List<Advisor> buildAspectJAdvisors() {
+		// 所有的切面name
 		List<String> aspectNames = this.aspectBeanNames;
 
+		/**
+		 * 初始化 aspectNames(所有切面name缓存)
+		 * 初始化 advisorsCache(所有切面增强器缓存)
+		 */
 		if (aspectNames == null) {
 			synchronized (this) {
 				aspectNames = this.aspectBeanNames;
 				if (aspectNames == null) {
 					List<Advisor> advisors = new ArrayList<>();
 					aspectNames = new ArrayList<>();
+					// 获取被spring管理下的所有 Object 子类型beanName（也就是获取Spring容器中所有的BeanName）
 					String[] beanNames = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
 							this.beanFactory, Object.class, true, false);
 					for (String beanName : beanNames) {
@@ -101,29 +115,38 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 						if (beanType == null) {
 							continue;
 						}
+						// 判断当前bean是否是切面，是否有@Aspect
 						if (this.advisorFactory.isAspect(beanType)) {
+							// 添加到切面集合中
 							aspectNames.add(beanName);
+							// 使用了@Aspect注解标注的 bean 将其封装为一个 AspectMetadata，并判断bean是否是单例，默认切面类都是单例
 							AspectMetadata amd = new AspectMetadata(beanType, beanName);
 							if (amd.getAjType().getPerClause().getKind() == PerClauseKind.SINGLETON) {
 								MetadataAwareAspectInstanceFactory factory =
 										new BeanFactoryAspectInstanceFactory(this.beanFactory, beanName);
+								// 通过factory获取当前切面下所有的增强器（Advisor），也就是切入点和通知的组合
 								List<Advisor> classAdvisors = this.advisorFactory.getAdvisors(factory);
 								if (this.beanFactory.isSingleton(beanName)) {
+									//如果切面类是 singleton 类型 则将解析得到的 Advisor 进行缓存
 									this.advisorsCache.put(beanName, classAdvisors);
 								}
 								else {
+									//不是 singleton 类型 则将封装的当前的factory进行缓存 以便再次获取时可以通过factory直接获取
 									this.aspectFactoryCache.put(beanName, factory);
 								}
 								advisors.addAll(classAdvisors);
 							}
 							else {
-								// Per target or per this.
+								//不是单例的
+								//这里再次判断 如果这里判断是单例的则抛出异常
 								if (this.beanFactory.isSingleton(beanName)) {
 									throw new IllegalArgumentException("Bean with name '" + beanName +
 											"' is a singleton, but aspect instantiation model is not singleton");
 								}
+								//将当前切面 bean 封装为一个多例类型的 Factory
 								MetadataAwareAspectInstanceFactory factory =
 										new PrototypeAspectInstanceFactory(this.beanFactory, beanName);
+								//进行缓存
 								this.aspectFactoryCache.put(beanName, factory);
 								advisors.addAll(this.advisorFactory.getAdvisors(factory));
 							}
@@ -140,11 +163,13 @@ public class BeanFactoryAspectJAdvisorsBuilder {
 		}
 		List<Advisor> advisors = new ArrayList<>();
 		for (String aspectName : aspectNames) {
+			// 根据切面name，从切面增强器缓存中，获取切面增强器
 			List<Advisor> cachedAdvisors = this.advisorsCache.get(aspectName);
 			if (cachedAdvisors != null) {
 				advisors.addAll(cachedAdvisors);
 			}
 			else {
+				//单例中获取不到 封装为一个  MetadataAwareAspectInstanceFactory 加入多例缓存中
 				MetadataAwareAspectInstanceFactory factory = this.aspectFactoryCache.get(aspectName);
 				advisors.addAll(this.advisorFactory.getAdvisors(factory));
 			}
