@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:aop="http://www.springframework.org/schema/aop"
+	   xmlns:context="http://www.springframework.org/schema/context"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd">
+
+
+
+	<bean id="UserServiceImpl" class="com.spring.test.service.UserServiceImpl"></bean>
+	<!-- 创建前置通知类bean -->
+	<bean id="myBeforeAdvisor" class="com.spring.test.aop.MyBeforeAdvisor"></bean>
+
+	<!-- 创建 后置通知类bean -->
+	<bean id="myAfterAdvisor" class="com.spring.test.aop.MyAfterAdvisor"></bean>
+
+	<aop:config>
+		<!-- 将满足包名为cn.ganlixin.*.test的包下的所有类中的所有方法都设置为切点 -->
+		<aop:pointcut expression="execution(* com.spring.test.service.UserServiceImpl.*.*(..))" id="point_cut5"/>
+
+		<!-- 为指定的切点 设置通知， 直接引用自己创建的通知bean， 运行时会自动判断是前置通知和后置通知 -->
+		<aop:advisor advice-ref="myBeforeAdvisor" pointcut-ref="point_cut5"/>
+		<aop:advisor advice-ref="myAfterAdvisor" pointcut-ref="point_cut5"/>
+
+	</aop:config>
+
+</beans>
