@@ -197,23 +197,30 @@ final class PostProcessorRegistrationDelegate {
 	public static void registerBeanPostProcessors(
 			ConfigurableListableBeanFactory beanFactory, AbstractApplicationContext applicationContext) {
 
-		// 获取所有实现 BeanPostProcessor 接口类名
+		// 去 beanDefinitionNames容器中，找实现BeanPostProcessor接口的bean
 		String[] postProcessorNames = beanFactory.getBeanNamesForType(BeanPostProcessor.class, true, false);
 
 		// Register BeanPostProcessorChecker that logs an info message when
 		// a bean is created during BeanPostProcessor instantiation, i.e. when
 		// a bean is not eligible for getting processed by all BeanPostProcessors.
+		//记录所有的beanProcessor数量，在这之前也可能注册了一部分Spring内部的BeanPostProcessors接口，例如：ApplicationContextAwareProcessor
 		int beanProcessorTargetCount = beanFactory.getBeanPostProcessorCount() + 1 + postProcessorNames.length;
 		beanFactory.addBeanPostProcessor(new BeanPostProcessorChecker(beanFactory, beanProcessorTargetCount));
 
 		// Separate between BeanPostProcessors that implement PriorityOrdered,
 		// Ordered, and the rest.
+		// 记录优先级最高的BeanPostProcessors集合，这类最先调用；需要实现PriorityOrdered接口
 		List<BeanPostProcessor> priorityOrderedPostProcessors = new ArrayList<>();
+		// 记录内部BeanPostProcessors集合
 		List<BeanPostProcessor> internalPostProcessors = new ArrayList<>();
+		// 记录实现了 Ordered 接口的 BeanPostProcessor 的 beanName
 		List<String> orderedPostProcessorNames = new ArrayList<>();
+		// 记录普通的没有实现 Ordered 接口的 BeanPostProcessor 的beanName
 		List<String> nonOrderedPostProcessorNames = new ArrayList<>();
+
+		// 下面的这些代码就是遍历所有postProcessorNames，按优先级排序；类型 PriorityOrdered > Ordered > 普通；在这个类型基础上，还要对他们的order属性就行排序
 		for (String ppName : postProcessorNames) {
-			//  ppName name对应的Bean，是否实现了 PriorityOrdered 接口
+			// 优先级1： ppName name对应的Bean，是否实现了 PriorityOrdered 接口
 			if (beanFactory.isTypeMatch(ppName, PriorityOrdered.class)) {
 				// 根据 ppName name获取对应的 BeanPostProcessor
 				BeanPostProcessor pp = beanFactory.getBean(ppName, BeanPostProcessor.class);
@@ -222,9 +229,11 @@ final class PostProcessorRegistrationDelegate {
 					internalPostProcessors.add(pp);
 				}
 			}
+			// 优先级2：实现 Ordered 接口
 			else if (beanFactory.isTypeMatch(ppName, Ordered.class)) {
 				orderedPostProcessorNames.add(ppName);
 			}
+			// 优先级3：普通
 			else {
 				nonOrderedPostProcessorNames.add(ppName);
 			}
@@ -233,7 +242,7 @@ final class PostProcessorRegistrationDelegate {
 		// First, register the BeanPostProcessors that implement PriorityOrdered.
 		// 对 priorityOrderedPostProcessors 进行排序
 		sortPostProcessors(priorityOrderedPostProcessors, beanFactory);
-		// 注册 priorityOrderedPostProcessors
+		// ---重要---  注册 priorityOrderedPostProcessors
 		registerBeanPostProcessors(beanFactory, priorityOrderedPostProcessors);
 
 		// Next, register the BeanPostProcessors that implement Ordered.
@@ -245,7 +254,9 @@ final class PostProcessorRegistrationDelegate {
 				internalPostProcessors.add(pp);
 			}
 		}
+		// 排序
 		sortPostProcessors(orderedPostProcessors, beanFactory);
+		// ---重要---  注册 orderedPostProcessors
 		registerBeanPostProcessors(beanFactory, orderedPostProcessors);
 
 		// Now, register all regular BeanPostProcessors.

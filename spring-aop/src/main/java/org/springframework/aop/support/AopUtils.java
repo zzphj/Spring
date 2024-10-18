@@ -224,15 +224,18 @@ public abstract class AopUtils {
 	public static boolean canApply(Pointcut pc, Class<?> targetClass, boolean hasIntroductions) {
 		Assert.notNull(pc, "Pointcut must not be null");
 		if (!pc.getClassFilter().matches(targetClass)) {
+			//如果 Pointcut不能应用于 targetClass 类上 则直接返回false
 			return false;
 		}
 
 		MethodMatcher methodMatcher = pc.getMethodMatcher();
 		if (methodMatcher == MethodMatcher.TRUE) {
+			//完成匹配
 			// No need to iterate the methods if we're matching any method anyway...
 			return true;
 		}
 
+		// 下面是 引介增强 的逻辑处理
 		IntroductionAwareMethodMatcher introductionAwareMethodMatcher = null;
 		if (methodMatcher instanceof IntroductionAwareMethodMatcher) {
 			introductionAwareMethodMatcher = (IntroductionAwareMethodMatcher) methodMatcher;
@@ -281,11 +284,16 @@ public abstract class AopUtils {
 	 * @return whether the pointcut can apply on any method
 	 */
 	public static boolean canApply(Advisor advisor, Class<?> targetClass, boolean hasIntroductions) {
+		// 引介增强
 		if (advisor instanceof IntroductionAdvisor) {
+			//引介增强 判断该增强是否可以应用在targetClass上 如果可以则返回true 否则返回false
 			return ((IntroductionAdvisor) advisor).getClassFilter().matches(targetClass);
 		}
+		// 普通增强（也就是切点增强）
 		else if (advisor instanceof PointcutAdvisor) {
+			//增强器转换为 切点增强器
 			PointcutAdvisor pca = (PointcutAdvisor) advisor;
+			// pca.getPointcut() 获取切点入点表达式，表示要拦截哪些方法
 			return canApply(pca.getPointcut(), targetClass, hasIntroductions);
 		}
 		else {
@@ -303,21 +311,26 @@ public abstract class AopUtils {
 	 * (may be the incoming List as-is)
 	 */
 	public static List<Advisor> findAdvisorsThatCanApply(List<Advisor> candidateAdvisors, Class<?> clazz) {
+		//如果所有增强器为空 直接返回
 		if (candidateAdvisors.isEmpty()) {
 			return candidateAdvisors;
 		}
+		// 存放当前 bean 的增强器
 		List<Advisor> eligibleAdvisors = new ArrayList<>();
 		for (Advisor candidate : candidateAdvisors) {
+			// 单独对实现了 IntroductionAdvisor 接口的增强器做处理，实现了这个接口的类是引介增强，下面这个for就是平常的普通增强
 			if (candidate instanceof IntroductionAdvisor && canApply(candidate, clazz)) {
 				eligibleAdvisors.add(candidate);
 			}
 		}
 		boolean hasIntroductions = !eligibleAdvisors.isEmpty();
 		for (Advisor candidate : candidateAdvisors) {
+			// 引介增强的这里排除
 			if (candidate instanceof IntroductionAdvisor) {
 				// already processed
 				continue;
 			}
+			// 这里的都是普通增强
 			if (canApply(candidate, clazz, hasIntroductions)) {
 				eligibleAdvisors.add(candidate);
 			}

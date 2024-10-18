@@ -97,6 +97,7 @@ public class AspectJAwareAdvisorAutoProxyCreator extends AbstractAdvisorAutoProx
 
 	@Override
 	protected boolean shouldSkip(Class<?> beanClass, String beanName) {
+		//查找 增强器 顾问 Advisor  重点分析的方法
 		// TODO: Consider optimization by caching the list of the aspect names
 		List<Advisor> candidateAdvisors = findCandidateAdvisors();
 		for (Advisor advisor : candidateAdvisors) {
@@ -105,6 +106,7 @@ public class AspectJAwareAdvisorAutoProxyCreator extends AbstractAdvisorAutoProx
 				return true;
 			}
 		}
+		//检查 beanName 代表的是不是原始对象
 		return super.shouldSkip(beanClass, beanName);
 	}
 

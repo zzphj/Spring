@@ -252,6 +252,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 
 	@Override
 	public Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) {
+		//尝试从缓存中获取 指定beanName 的 bean
 		Object cacheKey = getCacheKey(beanClass, beanName);
 
 		if (!StringUtils.hasLength(beanName) || !this.targetSourcedBeans.contains(beanName)) {
@@ -365,7 +366,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		}
 
 		// Create proxy if we have advice.
-		// 获取所有切面的增强器（顾问）
+		// 获取当前 beanName 匹配的所有切面增强器，并按顺序排序
 		Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(bean.getClass(), beanName, null);
 		if (specificInterceptors != DO_NOT_PROXY) {
 			this.advisedBeans.put(cacheKey, Boolean.TRUE);
@@ -469,28 +470,40 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 			AutoProxyUtils.exposeTargetClass((ConfigurableListableBeanFactory) this.beanFactory, beanName, beanClass);
 		}
 
+		//创建 代理工厂
 		ProxyFactory proxyFactory = new ProxyFactory();
+		//将当前对象的信息复制到代理工厂
 		proxyFactory.copyFrom(this);
-
+		//判断当前bean 是使用 TargetClass 代理还是接口代理
 		if (!proxyFactory.isProxyTargetClass()) {
+			//检查 proxyTargeClass 设置
 			if (shouldProxyTargetClass(beanClass, beanName)) {
+				//设置使用 TargetClass 而不是接口代理
+				//Cglib 代理:true
+				//jdk 代理:false
 				proxyFactory.setProxyTargetClass(true);
 			}
 			else {
+				//代理接口
 				evaluateProxyInterfaces(beanClass, proxyFactory);
 			}
 		}
 
+		// 当前bean的所有增强器
 		Advisor[] advisors = buildAdvisors(beanName, specificInterceptors);
+		// set 增强器到代理工厂中
 		proxyFactory.addAdvisors(advisors);
+		// set 被代理类到代理工厂中
 		proxyFactory.setTargetSource(targetSource);
+		// 自定义代理方法 默认空实现
 		customizeProxyFactory(proxyFactory);
-
+		// 默认false 表示代理被配置后 就不允许修改它的配置了
 		proxyFactory.setFrozen(this.freezeProxy);
 		if (advisorsPreFiltered()) {
 			proxyFactory.setPreFiltered(true);
 		}
 
+		//获取代理对象
 		return proxyFactory.getProxy(getProxyClassLoader());
 	}
 
