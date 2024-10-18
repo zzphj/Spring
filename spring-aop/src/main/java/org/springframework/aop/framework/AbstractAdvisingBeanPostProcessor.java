@@ -63,36 +63,46 @@ public abstract class AbstractAdvisingBeanPostProcessor extends ProxyProcessorSu
 
 	@Override
 	public Object postProcessAfterInitialization(Object bean, String beanName) {
+		// 如果 advisor(当前切面) 为 null 或者 Bean 是 AopInfrastructureBean 的实例，则直接返回原始的 Bean 对象，不进行任何处理
 		if (this.advisor == null || bean instanceof AopInfrastructureBean) {
 			// Ignore AOP infrastructure such as scoped proxies.
+			// 直接返回，不进行增强
 			return bean;
 		}
 
+		// 如果 Bean 是 Advised 接口的实例（即已经是一个代理对象），则根据条件判断是否需要将本地 Advisor 添加到现有代理对象的 Advisor 链中
 		if (bean instanceof Advised) {
 			Advised advised = (Advised) bean;
 			if (!advised.isFrozen() && isEligible(AopUtils.getTargetClass(bean))) {
-				// Add our local Advisor to the existing proxy's Advisor chain...
+				// 将本地 Advisor 添加到现有代理对象的 Advisor 链中
 				if (this.beforeExistingAdvisors) {
+					// 为0添加到头部(也就是没有当前代理对象没有切面)
 					advised.addAdvisor(0, this.advisor);
 				}
 				else {
+					// 添加尾端
 					advised.addAdvisor(this.advisor);
 				}
 				return bean;
 			}
 		}
 
+		// 如果 Bean 符合特定条件需要进行 AOP 处理，则执行以下操作，进行aop代理
 		if (isEligible(bean, beanName)) {
+			// 创建代理对象工厂
 			ProxyFactory proxyFactory = prepareProxyFactory(bean, beanName);
 			if (!proxyFactory.isProxyTargetClass()) {
 				evaluateProxyInterfaces(bean.getClass(), proxyFactory);
 			}
+			// 添加 Advisor 到代理工厂中
 			proxyFactory.addAdvisor(this.advisor);
+			// 定制代理工厂
 			customizeProxyFactory(proxyFactory);
+			// 创建代理对象并返回
 			return proxyFactory.getProxy(getProxyClassLoader());
 		}
 
-		// No proxy needed.
+		// 不进行aop代理
 		return bean;
 	}
 

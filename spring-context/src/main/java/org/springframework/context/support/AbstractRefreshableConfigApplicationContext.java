@@ -76,8 +76,11 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 	public void setConfigLocations(@Nullable String... locations) {
 		if (locations != null) {
 			Assert.noNullElements(locations, "Config locations must not be null");
+			// 1.2 将配置资源路径放入 configLocations 数组中
 			this.configLocations = new String[locations.length];
 			for (int i = 0; i < locations.length; i++) {
+				// resolvePath 解析给定的路径，用对应的占位符(placeholder)替换 特殊语法、特殊符号
+				// 例如 new ClassPathXmlApplicationContext("classpath:config.xml");，就需要解析 classpath，变成正确路径。
 				this.configLocations[i] = resolvePath(locations[i]).trim();
 			}
 		}
@@ -98,6 +101,7 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 	 */
 	@Nullable
 	protected String[] getConfigLocations() {
+		// 前面 setConfigLocations 时就给 configLocations 赋值了
 		return (this.configLocations != null ? this.configLocations : getDefaultConfigLocations());
 	}
 
@@ -122,6 +126,8 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 	 * @see org.springframework.core.env.Environment#resolveRequiredPlaceholders(String)
 	 */
 	protected String resolvePath(String path) {
+		// getEnvironment() 获取环境
+		// resolveRequiredPlaceholders() path路径的解析占位符
 		return getEnvironment().resolveRequiredPlaceholders(path);
 	}
 

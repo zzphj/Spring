@@ -158,6 +158,7 @@ public abstract class AnnotationConfigUtils {
 			}
 		}
 
+		// 初始化5个BeanDefinition，并添加到beanDefinitionMap中
 		Set<BeanDefinitionHolder> beanDefs = new LinkedHashSet<>(8);
 
 		if (!registry.containsBeanDefinition(CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME)) {

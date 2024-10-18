@@ -84,9 +84,9 @@ public class AsyncAnnotationAdvisor extends AbstractPointcutAdvisor implements B
 
 	/**
 	 * Create a new {@code AsyncAnnotationAdvisor} for the given task executor.
-	 * @param executor the task executor to use for asynchronous methods
+	 * @param executor (用于异步方法的任务执行器) the task executor to use for asynchronous methods
 	 * (can be {@code null} to trigger default executor resolution)
-	 * @param exceptionHandler the {@link AsyncUncaughtExceptionHandler} to use to
+	 * @param exceptionHandler (来使用处理异步方法执行时抛出的意外异常) the {@link AsyncUncaughtExceptionHandler} to use to
 	 * handle unexpected exception thrown by asynchronous method executions
 	 * @since 5.1
 	 * @see AnnotationAsyncExecutionInterceptor#getDefaultExecutor(BeanFactory)
@@ -95,6 +95,7 @@ public class AsyncAnnotationAdvisor extends AbstractPointcutAdvisor implements B
 	public AsyncAnnotationAdvisor(
 			@Nullable Supplier<Executor> executor, @Nullable Supplier<AsyncUncaughtExceptionHandler> exceptionHandler) {
 
+		// 将需要拦截的 @Async、@Asynchronous注解添加到asyncAnnotationTypes中
 		Set<Class<? extends Annotation>> asyncAnnotationTypes = new LinkedHashSet<>(2);
 		asyncAnnotationTypes.add(Async.class);
 		try {
@@ -104,7 +105,9 @@ public class AsyncAnnotationAdvisor extends AbstractPointcutAdvisor implements B
 		catch (ClassNotFoundException ex) {
 			// If EJB 3.1 API not present, simply ignore.
 		}
+		// 定义通知（用来增强切入点的方法）
 		this.advice = buildAdvice(executor, exceptionHandler);
+		// 定义切入点（需要增强的方法）
 		this.pointcut = buildPointcut(asyncAnnotationTypes);
 	}
 
@@ -163,7 +166,9 @@ public class AsyncAnnotationAdvisor extends AbstractPointcutAdvisor implements B
 	protected Pointcut buildPointcut(Set<Class<? extends Annotation>> asyncAnnotationTypes) {
 		ComposablePointcut result = null;
 		for (Class<? extends Annotation> asyncAnnotationType : asyncAnnotationTypes) {
+			// 定义在类上标注@Async、@Asynchronous注解的切入点
 			Pointcut cpc = new AnnotationMatchingPointcut(asyncAnnotationType, true);
+			// 定义在方法上标注@Async、@Asynchronous注解的切入点
 			Pointcut mpc = new AnnotationMatchingPointcut(null, asyncAnnotationType, true);
 			if (result == null) {
 				result = new ComposablePointcut(cpc);

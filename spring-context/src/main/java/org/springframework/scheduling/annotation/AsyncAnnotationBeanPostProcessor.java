@@ -142,15 +142,27 @@ public class AsyncAnnotationBeanPostProcessor extends AbstractBeanFactoryAwareAd
 	}
 
 
+	/**
+	 * 实现BeanFactoryAware接口,会在创建Bean生命周期初始化之前调用
+	 * 作用:初始化异步处理切面
+	 */
 	@Override
 	public void setBeanFactory(BeanFactory beanFactory) {
 		super.setBeanFactory(beanFactory);
 
+		/**
+		 * 切入点：需要增强的方法
+		 * 通知：用来增强切入点的方法
+		 * 切面：就是用于存放通知的类
+		 */
+
+		// 初始化 切面
 		AsyncAnnotationAdvisor advisor = new AsyncAnnotationAdvisor(this.executor, this.exceptionHandler);
 		if (this.asyncAnnotationType != null) {
 			advisor.setAsyncAnnotationType(this.asyncAnnotationType);
 		}
 		advisor.setBeanFactory(beanFactory);
+		// 后续父类初始化后置处理器(AbstractAdvisingBeanPostProcessor#postProcessAfterInitialization)会执行，将 this.advisor切面 添加到代理对象中
 		this.advisor = advisor;
 	}
 

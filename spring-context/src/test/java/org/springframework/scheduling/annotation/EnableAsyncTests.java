@@ -432,7 +432,7 @@ public class EnableAsyncTests {
 
 
 	@Configuration
-	@EnableAsync
+
 	static class AsyncConfig {
 
 		@Bean

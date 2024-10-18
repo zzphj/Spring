@@ -316,6 +316,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	@Override
 	public ConfigurableEnvironment getEnvironment() {
 		if (this.environment == null) {
+			// createEnvironment() 创建环境
 			this.environment = createEnvironment();
 		}
 		return this.environment;
@@ -456,6 +457,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * @see org.springframework.core.io.support.PathMatchingResourcePatternResolver
 	 */
 	protected ResourcePatternResolver getResourcePatternResolver() {
+		// PathMatchingResourcePatternResolver支持Ant风格的路径解析。
 		return new PathMatchingResourcePatternResolver(this);
 	}
 
@@ -516,41 +518,53 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	@Override
 	public void refresh() throws BeansException, IllegalStateException {
 		synchronized (this.startupShutdownMonitor) {
-			// Prepare this context for refreshing.
+			// Prepare this context for refreshing. （为更新准备上下文，设定一些标志）
 			prepareRefresh();
 
-			// Tell the subclass to refresh the internal bean factory.
+			// 1.refreshBeanFactory() 刷新BeanFactory
+			// 2.getBeanFactory() 获取BeanFactory
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
 			// Prepare the bean factory for use in this context.
+			//准备在上下文中使用的bean工厂
 			prepareBeanFactory(beanFactory);
 
 			try {
 				// Allows post-processing of the bean factory in context subclasses.
+				//允许在上下文子类中对 beanFactory 进行后处理。
 				postProcessBeanFactory(beanFactory);
 
 				// Invoke factory processors registered as beans in the context.
+				// 1.调用 BeanDefinitionRegistryPostProcessor 和 BeanFactoryPostProcessor 后置处理器，前一个处理器继承了后一个处理器，子类的优先级更高，在父类之前执行
+				// 2.扫描@ComponentScan注解路径下的类，生成BeanDefinition，注册到BeanDefinitionMap中
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
+				// 注册bean的后置处理器(也就是初始化前后处理器)
 				registerBeanPostProcessors(beanFactory);
 
 				// Initialize message source for this context.
+				// 国际化处理，为上下文初始化Message源，即不同语语言的消息体
 				initMessageSource();
 
 				// Initialize event multicaster for this context.
+				// 初始化上下文的事件广播器
 				initApplicationEventMulticaster();
 
 				// Initialize other special beans in specific context subclasses.
+				// 能够被覆盖的模板方法，用来添加特定上下文的更新工作，在特殊bean进行初始化或者单例bean进行实例化时被调用，在该类中是一个空实现
 				onRefresh();
 
 				// Check for listener beans and register them.
+				// 在所有注册的bean中查找Listener bean,注册到消息广播器中，即向监听器发布事件
 				registerListeners();
 
 				// Instantiate all remaining (non-lazy-init) singletons.
+				// 非懒加载的类，将在这一步实例化，完成类的加载。好处是加载快，启动加载得时候就能发现Bean得问题
 				finishBeanFactoryInitialization(beanFactory);
 
 				// Last step: publish corresponding event.
+				// 最后一步：完成刷新过程，通知生命周期处理器lifecycleProcessor刷新过程
 				finishRefresh();
 			}
 
@@ -598,6 +612,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		}
 
 		// Initialize any placeholder property sources in the context environment.
+		// 空实现 (后续可以重写此方法，编写对应业务)
 		initPropertySources();
 
 		// Validate that all properties marked as required are resolvable:
@@ -635,6 +650,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * @see #getBeanFactory()
 	 */
 	protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
+		// 具体调用的是 AbstractRefreshableApplicationContext 类的
 		refreshBeanFactory();
 		return getBeanFactory();
 	}
@@ -704,6 +720,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * <p>Must be called before singleton instantiation.
 	 */
 	protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory beanFactory) {
+		// 1.getBeanFactoryPostProcessors(): 拿到当前应用上下文beanFactoryPostProcessors变量中的值 （默认为空）
+		// 2.invokeBeanFactoryPostProcessors: 实例化并调用所有已注册的BeanFactoryPostProcessor
 		PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, getBeanFactoryPostProcessors());
 
 		// Detect a LoadTimeWeaver and prepare for weaving, if found in the meantime
@@ -876,6 +894,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		beanFactory.freezeConfiguration();
 
 		// Instantiate all remaining (non-lazy-init) singletons.
+		// 实例化所有剩余的（非懒加载）单列bean
 		beanFactory.preInstantiateSingletons();
 	}
 
@@ -1351,6 +1370,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 	@Override
 	public Resource[] getResources(String locationPattern) throws IOException {
+		// 构造方法中就已经初始化成了 PathMatchingResourcePatternResolver
 		return this.resourcePatternResolver.getResources(locationPattern);
 	}
 

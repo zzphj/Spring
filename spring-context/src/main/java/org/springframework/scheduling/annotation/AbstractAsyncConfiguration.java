@@ -52,6 +52,9 @@ public abstract class AbstractAsyncConfiguration implements ImportAware {
 	protected Supplier<AsyncUncaughtExceptionHandler> exceptionHandler;
 
 
+	/**
+	 * 获取注解属性信息，并设置
+	 */
 	@Override
 	public void setImportMetadata(AnnotationMetadata importMetadata) {
 		this.enableAsync = AnnotationAttributes.fromMap(

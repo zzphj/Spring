@@ -279,16 +279,19 @@ public class PathMatchingResourcePatternResolver implements ResourcePatternResol
 		Assert.notNull(locationPattern, "Location pattern must not be null");
 		if (locationPattern.startsWith(CLASSPATH_ALL_URL_PREFIX)) {
 			// a class path resource (multiple resources for same name possible)
+			// isPattern 判断 路径是否是 ant 风格的，具体就是判断是否字符串中是否包含 *,?,{,}这些 (也就是这样的 com.*/xml)
 			if (getPathMatcher().isPattern(locationPattern.substring(CLASSPATH_ALL_URL_PREFIX.length()))) {
 				// a class path resource pattern
+				// 有通配符的，需要解析
 				return findPathMatchingResources(locationPattern);
 			}
 			else {
 				// all class path resources with the given name
+				// 没有通配符走这里，也就是直接通过路径就能找到，不用去匹配通配符
 				return findAllClassPathResources(locationPattern.substring(CLASSPATH_ALL_URL_PREFIX.length()));
 			}
 		}
-		else {
+		else {  //如果不是以"classpath*:"开头，就会走这里
 			// Generally only look for a pattern after a prefix here,
 			// and on Tomcat only after the "*/" separator for its "war:" protocol.
 			int prefixEnd = (locationPattern.startsWith("war:") ? locationPattern.indexOf("*/") + 1 :
@@ -315,6 +318,7 @@ public class PathMatchingResourcePatternResolver implements ResourcePatternResol
 	 */
 	protected Resource[] findAllClassPathResources(String location) throws IOException {
 		String path = location;
+		// 如果是 / 开头，去掉 /
 		if (path.startsWith("/")) {
 			path = path.substring(1);
 		}

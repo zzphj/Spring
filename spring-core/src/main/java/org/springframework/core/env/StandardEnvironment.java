@@ -61,6 +61,8 @@ public class StandardEnvironment extends AbstractEnvironment {
 
 
 	/**
+	 * 作用：加载系统变量和环境变量
+	 * 概述: 自定义属性源 (优先执行父类构造方法)
 	 * Customize the set of property sources with those appropriate for any standard
 	 * Java environment:
 	 * <ul>
@@ -75,6 +77,8 @@ public class StandardEnvironment extends AbstractEnvironment {
 	 */
 	@Override
 	protected void customizePropertySources(MutablePropertySources propertySources) {
+		// getSystemProperties 将会存储系统的参数
+		// 到时这些参数就能在启动的应用中，通过上下文 context 进行获取  ((MutablePropertySources)((StandardEnvironment)context.environment).propertySources).propertySourceList
 		propertySources.addLast(
 				new PropertiesPropertySource(SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME, getSystemProperties()));
 		propertySources.addLast(

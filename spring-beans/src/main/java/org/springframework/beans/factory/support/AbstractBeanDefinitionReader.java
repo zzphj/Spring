@@ -185,6 +185,7 @@ public abstract class AbstractBeanDefinitionReader implements BeanDefinitionRead
 		Assert.notNull(resources, "Resource array must not be null");
 		int count = 0;
 		for (Resource resource : resources) {
+			// 会调用 XmlBeanDefinitionReader 的 loadBeanDefinitions
 			count += loadBeanDefinitions(resource);
 		}
 		return count;
@@ -217,10 +218,13 @@ public abstract class AbstractBeanDefinitionReader implements BeanDefinitionRead
 					"Cannot load bean definitions from location [" + location + "]: no ResourceLoader available");
 		}
 
+		//参见ResourceLoader类图，ClassPathXmlApplicationContext实现了此接口
 		if (resourceLoader instanceof ResourcePatternResolver) {
 			// Resource pattern matching available.
 			try {
+				// 调用的是 AbstractApplicationContext#getResources，用来加载资源
 				Resource[] resources = ((ResourcePatternResolver) resourceLoader).getResources(location);
+				// 解析
 				int count = loadBeanDefinitions(resources);
 				if (actualResources != null) {
 					Collections.addAll(actualResources, resources);
