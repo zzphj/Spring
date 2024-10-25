@@ -526,6 +526,7 @@ class ConfigurationClassParser {
 
 
 	/**
+	 * 当前类是否有@Import注解，有就获取@Import注解中的value属性
 	 * Returns {@code @Import} class, considering all meta-annotations.
 	 */
 	private Set<SourceClass> getImports(SourceClass sourceClass) throws IOException {
@@ -604,9 +605,11 @@ class ConfigurationClassParser {
 						// Candidate class is an ImportBeanDefinitionRegistrar ->
 						// delegate to it to register additional bean definitions
 						Class<?> candidateClass = candidate.loadClass();
+						// 根据candidateClass创建ImportBeanDefinitionRegistrar对象
 						ImportBeanDefinitionRegistrar registrar =
 								ParserStrategyUtils.instantiateClass(candidateClass, ImportBeanDefinitionRegistrar.class,
 										this.environment, this.resourceLoader, this.registry);
+						// 将它添加到各自的ImportBeanDefinitionRegistrar Map缓存中
 						configClass.addImportBeanDefinitionRegistrar(registrar, currentSourceClass.getMetadata());
 					}
 					else {

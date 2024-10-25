@@ -3,10 +3,13 @@ package com.spring.test;/**
  * @Date 2023/7/17
  */
 
+import com.spring.test.beanDefinitionRegistrar.MyImportBeanDefinitionRegistrar;
 import com.spring.test.service.UserServiceImpl;
+import com.spring.test1.MyRegistrarBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 /**
  * @Description:
@@ -14,12 +17,13 @@ import org.springframework.context.annotation.Configuration;
  * @Date: 2023/7/17 11:21
  */
 @Configuration
+@Import(value = MyImportBeanDefinitionRegistrar.class)
 //@ComponentScan("com.spring.test")
 public class SpringMainTest {
 	public static void main(String[] args) {
 		ApplicationContext context = new AnnotationConfigApplicationContext("com.spring.test");
-		UserServiceImpl bean = (UserServiceImpl) context.getBean("userServiceImpl");
-		bean.sayHello();
+		MyRegistrarBean bean = (MyRegistrarBean) context.getBean("MyRegistrarBean");
+		bean.test();
 	}
 
 

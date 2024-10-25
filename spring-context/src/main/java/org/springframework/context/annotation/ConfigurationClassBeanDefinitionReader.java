@@ -145,6 +145,7 @@ class ConfigurationClassBeanDefinitionReader {
 		}
 
 		loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());
+		// 前面在importBeanDefinitionRegistrars中添加了缓存，这里直接取出，调用每个实现了ImportBeanDefinitionRegistrar接口的registerBeanDefinitions方法
 		loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());
 	}
 
